@@ -531,11 +531,22 @@ void ModelEuslisp::printMesh(const aiScene* scene, const aiNode* node, const Vec
     }
     if (printq) fprintf(fp, "))\n");
 
+#if 0
     if (printq) fprintf(fp, "                   (list :indices #i(");
+#else
+    if (printq) fprintf(fp, "                   (indices #g(");
+    if (printq) fprintf(fp, "(%d) :integer \"", 10);
+#endif
     for (uint32_t j = 0; j < input_mesh->mNumFaces; j++) {
       aiFace& face = input_mesh->mFaces[j];
       for (uint32_t k = 0; k < face.mNumIndices; ++k) {
+#if 0
         if (printq) fprintf(fp, " %d", face.mIndices[k]);
+#else
+        int index = face.mIndices[k];
+        char *tmp = (char *)&index;
+        //  if (printq) for(int n = 0; n < 4; n++) putc(*tmp++, fp);
+#endif
         aiVector3D p = input_mesh->mVertices[face.mIndices[k]];
         p *= transform;
         store_pt.push_back(p.x * scale.x);
@@ -543,18 +554,44 @@ void ModelEuslisp::printMesh(const aiScene* scene, const aiNode* node, const Vec
         store_pt.push_back(p.z * scale.z);
       }
     }
+#if 0
     if (printq) fprintf(fp, "))\n");
+#else
+    if (printq) fprintf(fp, "\"))\n");
+#endif
 
+#if 0
     if (printq) fprintf(fp, "                   (list :vertices (let ((mat (make-matrix %d 3))) (fvector-replace (array-entity mat) #f(", input_mesh->mNumVertices);
+#else
+    if (printq) fprintf(fp, "                   (list :vertices #g2( (%d 3) :double \"", input_mesh->mNumVertices);
+#endif
+
     // Add the vertices
     for (uint32_t j = 0; j < input_mesh->mNumVertices; j++)  {
       aiVector3D p = input_mesh->mVertices[j];
       p *= transform;
       //p *= scale;
+#if 0
       if (printq) fprintf(fp, FLOAT_PRECISION_FINE" "FLOAT_PRECISION_FINE" "FLOAT_PRECISION_FINE" ",
                           1000 * p.x * scale.x, 1000 * p.y * scale.y, 1000 * p.z * scale.z);
+#endif
+      double a0, a1, a2;
+      a0 = 1000 * p.x * scale.x;
+      a1 = 1000 * p.y * scale.y;
+      a2 = 1000 * p.z * scale.z;
+      char *tmp;
+      tmp = (char *)&a0;
+      if (printq) for(int n = 0; n < 8; n++) fputc(*tmp++, fp);
+      tmp = (char *)&a1;
+      if (printq) for(int n = 0; n < 8; n++) fputc(*tmp++, fp);
+      tmp = (char *)&a2;
+      if (printq) for(int n = 0; n < 8; n++) fputc(*tmp++, fp);
     }
+#if 0
     if (printq) fprintf(fp, ")) mat))");
+#else
+    if (printq) fprintf(fp, "\"))");
+#endif
 
     if (input_mesh->HasNormals()) {
       if (printq) fprintf(fp, "\n");
