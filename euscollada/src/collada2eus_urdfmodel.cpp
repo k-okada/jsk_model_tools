@@ -593,7 +593,7 @@ void ModelEuslisp::printMesh(const aiScene* scene, const aiNode* node, const Vec
 bool limb_order_asc(const pair<string, size_t>& left, const pair<string, size_t>& right) { return left.second < right.second; }
 void ModelEuslisp::readYaml (string &config_file) {
   // read yaml
-  std::vector<string> limb_candidates;  // limb names is given from yaml fiels
+  std::vector<string> limb_candidates{"torso", "larm", "rarm", "lleg", "rleg", "head"};  // default candidates of limb names
 
   vector<pair<string, size_t> > limb_order;
 #ifndef USE_CURRENT_YAML
@@ -609,14 +609,13 @@ void ModelEuslisp::readYaml (string &config_file) {
     // yaml-cpp is greater than 0.5.0
     doc = YAML::LoadFile(config_file.c_str());
 #endif
-    // set limb_candidates from yaml fiels
-    for(YAML::const_iterator it=doc.begin();it != doc.end();++it) {
-      // -end-coords, *-vector
-      if ( boost::algorithm::ends_with(it->first.as<std::string>(), "-coords") ||
-           boost::algorithm::ends_with(it->first.as<std::string>(), "-vector") ) {
-      } else {
-        limb_candidates.push_back(it->first.as<std::string>());
-      }
+#ifdef USE_CURRENT_YAML
+    if (doc["limbs"]) {
+#else
+    if ( doc.FindValue("limbs") ) {
+#endif
+      // set limb_candidates from yaml files
+      limb_candidates = doc["limbs"].as<std::vector<std::string> >();
     }
     /* re-order limb name by lines of yaml */
     BOOST_FOREACH(string& limb, limb_candidates) {
